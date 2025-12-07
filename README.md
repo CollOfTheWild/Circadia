@@ -1,48 +1,78 @@
-## Circadian Rhythm (MLX)
-Daytime chats are distilled nightly on Apple Silicon (MLX) via QLoRA, now paired with RAG to split “how to respond” (LoRA) from “what was said” (retrieval).
+## Circadia: Teach Your Model While It Sleeps (MLX, Apple Silicon)
 
-### Setup
-- `python -m venv .venv && source .venv/bin/activate`
-- `pip install -r requirements.txt`
-- Layout: `data/` for logs/RAG, `adapters/nightly_update/` for LoRA weights.
+### The vibe
+Circadia is a tiny nightly ritual for your local Llama (3.2B, 4-bit MLX). By day you chat; by night it “sleeps”: replaying the day, distilling style into LoRA weights, and shelving facts into RAG. Like human sleep:
+- **Procedural** (how you speak) gets stronger → LoRA.
+- **Episodic** (what was said) gets replayed → RAG.
+- You wake up with yesterday’s feel, without forgetting how to math.
 
-### Daytime Chat
-- `python chat.py` (loads adapter if present).
-- Logs every turn to `data/memories.jsonl`.
-- RAG on/off: `python chat.py --rag --rag-verbose` (retrieves past chats from `data/rag_memory`).
+### Why it’s novel
+- Not just “add RAG” or “run LoRA”: Circadia **routes** your own chat turns automatically—code/URLs/long snippets into RAG (verbatim), tone/preferences into LoRA (compressed).
+- No doc drop required: only input is your chats (paste code, logs, search results there). Sleep decides what to retrieve vs what to fine-tune.
+- Designed for Apple Silicon (MLX) with small, fast nightly jobs.
 
-### Nightly “Sleep” (LoRA + RAG routing)
-- Base: `python sleep.py --iters 100 --batch-size 1`
-- Optional: `--augment ...` for semisynthetic expansion.
-- RAG routing: `--rag --rag-dir data/rag_memory --rag-clear`
-  - Heuristics send code/URLs/long or JSON-ish chats to RAG.
-  - Everything still feeds LoRA; RAG holds verbatim facts, LoRA learns style/preferences.
+### Quick start
+```bash
+python -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+```
 
-### Loss & Capability Eval
-- Loss: `python eval_loss.py --max-samples 10 --out-csv logs/loss.csv --tag dayX-pre|post`
-- Harness: `python eval_harness.py --tag dayX-pre|post` (writes to `logs/eval_results.jsonl` + `logs/eval_summary.json`), categories: math, reasoning, factual, format, summarization, style, context.
+### Daytime: chat (optionally with RAG)
+```bash
+# Plain chat (loads adapter if present)
+python chat.py
 
-### One-Command Cycle
-- `python run_cycle.py --tag dayX --sleep-iters 100 --sleep-reset-adapter`
-- Runs pre-loss, pre-harness, sleep, post-loss, post-harness. Adapter reset happens before pre-eval for a fair baseline. Losses go to `logs/loss.csv`; summaries to `logs/eval_summary.json`.
+# Chat with retrieval of past chats
+python chat.py --rag --rag-verbose
+```
+Logs live in `data/memories.jsonl`. RAG index persists in `data/rag_memory`.
 
-### Experiment Logging
-- Every run of `run_cycle.py` logs to `logs/experiments.jsonl`:
-  - Hyperparams, pre/post loss, harness scores, deltas.
+### Nighttime: sleep (LoRA + RAG routing)
+```bash
+# Gentle nightly update (recommended sweet spot)
+python sleep.py \
+  --memory-file data/memories.jsonl \
+  --adapter-dir adapters/nightly_update \
+  --iters 50 --learning-rate 2e-5 \
+  --rag --rag-dir data/rag_memory --rag-clear \
+  --reset-adapter
+```
+Heuristics: code/URLs/JSON-ish/long/numeric-heavy → RAG. Everything still trains LoRA, so behavior stays stable while facts stay retrievable.
 
-### Datasets (optional)
-- Quick downloads in ShareGPT format:
-  - `python download_dataset.py --dataset dolly` → `data/dolly_15k.jsonl` (15K)
-  - `python download_dataset.py --dataset alpaca` → `data/alpaca_cleaned.jsonl` (52K)
-  - `--dataset all` to grab everything; defaults use your `data/memories.jsonl`.
+### One-command daily cycle
+```bash
+python run_cycle.py --tag day1 \
+  --sleep-iters 50 --sleep-learning-rate 2e-5 \
+  --sleep-reset-adapter --sleep-augment
+```
+Runs pre-eval, train, post-eval; logs to `logs/experiments.jsonl`, losses to `logs/loss.csv`, harness summaries to `logs/eval_summary.json`.
 
-### Testing
-- `pytest`
+### Evaluate
+```bash
+# Loss on your chat logs
+python eval_loss.py --max-samples 10 --out-csv logs/loss.csv --tag day1-pre
 
-### Files
-- `chat.py` — chat + optional RAG retrieval.
-- `sleep.py` — QLoRA, optional augmentation, and RAG ingestion/splitting.
-- `run_cycle.py` — full pre/train/post pipeline with experiment logging.
-- `rag.py` — ChromaDB-backed retrieval for chat history.
-- `download_dataset.py` — pull standard instruction-tuning datasets.
-- `STATE.md` — project log.
+# Capability harness (math, reasoning, factual, format, summarization, style, context)
+python eval_harness.py --tag day1-pre
+```
+Rerun with `...-post` to see deltas.
+
+### Optional datasets (for play)
+```bash
+python download_dataset.py --dataset dolly   # 15K, general
+python download_dataset.py --dataset alpaca  # 52K, classic
+```
+Defaults still use your `data/memories.jsonl`.
+
+### What’s inside
+- `chat.py` — chat with optional RAG retrieval.
+- `sleep.py` — QLoRA + RAG ingestion/splitting, optional augmentation.
+- `run_cycle.py` — pre/train/post driver with experiment logging.
+- `rag.py` — ChromaDB-backed retrieval for past chats.
+- `download_dataset.py` — grab Dolly/Alpaca in ShareGPT format.
+- `logs/experiments.jsonl` — hyperparams + pre/post metrics per run.
+
+### Notes from the lab
+- Gentle LR/iters matter: 2e-5, 50 iters dropped loss ~66% with only ~1 harness task regression.
+- Small, focused synthetic chats beat larger Dolly for preserving general skills (less interference).
+- RAG + LoRA separation keeps style adaptive and facts verbatim, mimicking the “sleep” split between procedural and episodic memory.
