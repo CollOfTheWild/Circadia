@@ -1,0 +1,9 @@
+mlx
+mlx-lm
+huggingface_hub
+pytest
+# RAG dependencies
+chromadb
+sentence-transformers
+datasets
+

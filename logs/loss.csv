@@ -1,0 +1,3 @@
+timestamp,loss,samples,model,adapter,tag
+2025-12-07T17:44:58,3.12158203125,2,mlx-community/Llama-3.2-3B-Instruct-4bit,,day1-pre
+2025-12-07T17:46:30,0.24871826171875,2,mlx-community/Llama-3.2-3B-Instruct-4bit,adapters/nightly_update,day1-post
