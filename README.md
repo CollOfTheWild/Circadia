@@ -4,7 +4,7 @@
 Circadia is a tiny nightly ritual for your local Llama (3.2B, 4-bit MLX). By day you chat; by night it “sleeps”: replaying the day, distilling style into LoRA weights, and shelving facts into RAG. Like human sleep:
 - **Procedural** (how you speak) gets stronger → LoRA.
 - **Episodic** (what was said) gets replayed → RAG.
-- You wake up with yesterday’s feel, without forgetting how to math.
+- You wake up with yesterday’s feel, without forgetting how to reason, and yesterday's code or data dropped directly into today's context.
 
 ### Why is it novel?
 - Not just “add RAG” or “run LoRA”: Circadia **routes** your own chat turns automatically—code/URLs/long snippets into RAG (verbatim), tone/preferences into LoRA (compressed).
