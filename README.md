@@ -1,12 +1,12 @@
 ## Circadia: Teach Your Model While It Sleeps (MLX, Apple Silicon)
 
-### The vibe
+### What is Circadia?
 Circadia is a tiny nightly ritual for your local Llama (3.2B, 4-bit MLX). By day you chat; by night it “sleeps”: replaying the day, distilling style into LoRA weights, and shelving facts into RAG. Like human sleep:
 - **Procedural** (how you speak) gets stronger → LoRA.
 - **Episodic** (what was said) gets replayed → RAG.
 - You wake up with yesterday’s feel, without forgetting how to math.
 
-### Why it’s novel
+### Why is it novel?
 - Not just “add RAG” or “run LoRA”: Circadia **routes** your own chat turns automatically—code/URLs/long snippets into RAG (verbatim), tone/preferences into LoRA (compressed).
 - No doc drop required: only input is your chats (paste code, logs, search results there). Sleep decides what to retrieve vs what to fine-tune.
 - Designed for Apple Silicon (MLX) with small, fast nightly jobs.
@@ -76,3 +76,5 @@ Defaults still use your `data/memories.jsonl`.
 - Gentle LR/iters matter: 2e-5, 50 iters dropped loss ~66% with only ~1 harness task regression.
 - Small, focused synthetic chats beat larger Dolly for preserving general skills (less interference).
 - RAG + LoRA separation keeps style adaptive and facts verbatim, mimicking the “sleep” split between procedural and episodic memory.
+
+If anything outlined in this README isn't there or doesn't work, it is either because I have yet to add it or it is broken. Feel free to submit a PR!
